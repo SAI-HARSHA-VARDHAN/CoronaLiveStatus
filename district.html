@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+            <title>CoronaLiveStatus</title>
+            <style>
+                body { 
+                    padding-top: 67px; 
+                }
+                #cases{
+                    background-color: #f2f2f2;
+                    padding: 20px;
+                    margin-bottom: 30px;
+                }
+                .loaded{
+                    padding-left: 100px;
+                    padding-top: 10px;
+                }
+                #toloaded{
+                    display: none;
+                }
+                #error{
+                    display: none;
+                }
+                @media only screen and (max-width: 600px) {
+                    .loaded{
+                        padding-left: 10px;
+                        padding-top: 0px;
+                    }
+                }
+            </style>
+            <script type="text/javascript">
+            var result;
+                function plotd(a,b,c){
+                    a = a.toString();
+                    a = a.replace(/,/g, "");
+                    a = Number(a);
+                    var chart = new CanvasJS.Chart("chartContainer", {
+                        theme: "light2", 
+                        animationEnabled: true, 
+                        title:{
+                            text: "COVID-19 Live Status"
+                        },
+                        data: [
+                        {
+                            type: "column",
+                            dataPoints: [
+                                { label: "Total Confirmed",  y: a  },
+                                { label: "Recovered", y: b  },
+                                { label: "Deaths", y: c  }
+                            ]
+                        }
+                        ]
+                    });
+                    chart.render();
+                }   
+                function toplot(){    
+                    var dist = document.getElementById("sel1").value;
+                    if(dist == "District List"){
+                        if(document.getElementById("stopc")){
+                            document.getElementById("stopc").src = "corona.jpg";
+                        }
+                        else{
+                            document.getElementById("chartContainer").innerHTML = '<img src="corona.jpg" class="rounded mx-auto d-block" id="stopc" style="margin-top:100px;" alt="spin" height="200px" width="200px">';
+                            document.getElementById("stopc").src = "corona.jpg";
+                        }  
+                        document.getElementById("toloaded").style.display = "none";
+                    }
+                    else{
+                        if(document.getElementById("stopc")){
+                            document.getElementById("stopc").src = "spin.gif";
+                        }
+                        else{
+                            document.getElementById("chartContainer").innerHTML = '<img src="corona.jpg" class="rounded mx-auto d-block" id="stopc" style="margin-top:100px;" alt="spin" height="200px" width="200px">';
+                            document.getElementById("stopc").src = "spin.gif";
+                        }      
+                        var state = document.getElementById("state").value;
+                        console.log(result);
+                        var legn = result.length;
+                        for(var k=0;k<legn;k++){
+                            if(dist == result[k].district){
+                                console.log(result[k]);
+                                document.getElementById("tot").innerHTML = result[k].confirmed;
+                                document.getElementById("cntryname").innerHTML = "Corona Status in "+result[k].district;
+                                document.getElementById("toloaded").style.display = "block";
+                                document.getElementById("error").style.display = "none";
+                                plotd(result[k].confirmed,0,0);
+                            }
+                        }
+                    }
+                }
+                function cntry(){
+                    document.getElementById("error").style.display = "none";
+                    document.getElementById("toloaded").style.display = "none";
+                    if(document.getElementById("stopc")){
+                        document.getElementById("stopc").src = "corona.jpg";
+                    }
+                    else{
+                        document.getElementById("chartContainer").innerHTML = '<img src="corona.jpg" class="rounded mx-auto d-block" id="stopc" style="margin-top:100px;" alt="spin" height="200px" width="200px">';
+                        document.getElementById("stopc").src = "corona.jpg";
+                    } 
+                    var state = document.getElementById("state").value;
+                    state = state.toLowerCase();
+                    var url = "https://api.covid19india.org/v2/state_district_wise.json";
+                    var settings = {
+                        "async": true,
+                        "crossDomain": true,
+                        "url": url,
+                        "method": "GET"
+                    }
+                    $.ajax(settings).done(function (response) {
+                        console.log(response[0]);
+                        var len = response.length;
+                        var f = 0;
+                        for(var i=0;i<len;i++){
+                            let temp = response[i].state;
+                            temp = temp.toLowerCase();
+                            temps = temp.split(" ").join("");
+                            if(temp == state || temps == state){
+                                f = 1;
+                                var district_data = response[i].districtData;
+                                result = district_data;
+                                var len1 = district_data.length;
+                                var string = "<option>District List</option>";
+                                for(var j=0;j<len1;j++){
+                                    let temp1 = district_data[j].district;
+                                    string += "<option value='"+temp1+"'>"+temp1+"</option>";
+                                }
+                                document.getElementById("sel1").innerHTML = string;
+                            }
+                        }
+                        if(f == 0){
+                            document.getElementById("error").style.display = "block";
+                            document.getElementById("stopc").src = "corona.jpg";
+                            document.getElementById("sel1").innerHTML = '';
+                            console.log("No State");
+                        }
+                    });
+                }
+            </script>
+        </head>
+        <body>
+            <nav class="navbar bg-dark navbar-dark fixed-top">
+                <image src="white_scrapshut1.png" class="nav-brand" alt="Brand" style="width:60px">
+                <a class="navbar-brand" href="index.html">ScrapShut</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+                        <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">World wide Report</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="country.html">Country wise Reports</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="state.html">State wise Reports</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://scrapshut.com/" target="_blank">About us</a>
+                    </li>
+                </ul>  
+                </div>
+            </nav>
+                <div class="container-fluid" id="cases">
+                    <br/>
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6 loaded">
+                            <h4>Search by State Name</h4>
+                            <form class="form-inline my-2 my-lg-0" action="javascript:void(0);">
+                                <input class="form-control mr-sm-2" type="search" id="state" placeholder="Search" aria-label="Search">
+                                <button class="btn btn-outline-success my-2 my-sm-0" type="button" onclick="cntry();">Get Details</button>
+                            </form>
+                            <br/>
+                            <div class="form-group">
+                                <label for="sel1">Select District</label>
+                                <select class="form-control" onchange="toplot();" id="sel1">
+                                </select>
+                            </div>
+                            <br/>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            <div class="container" id="toloaded">
+                                <h4 id="cntryname">World Wide Corona Cases</h4>
+                                <br/>
+                                <p>Total Confirmed - <span id="tot"><i class="fa fa-circle-o-notch fa-spin"></i></span></p>
+                            </div>  
+                            <div id="error">
+                                <h6 style="color: red;">Please Enter a valid State Name</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <div class="container" id="graph">
+                <div id="chartContainer" style="height: 370px; width: 100%;">
+                    <img src="corona.jpg" class="rounded mx-auto d-block" id="stopc" style="margin-top:100px;" alt="spin" height="200px" width="200px">
+                </div>
+            </div>
+            <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+        </body>
+    </html>

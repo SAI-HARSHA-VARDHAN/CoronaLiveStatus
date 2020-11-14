@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+            <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css">
+            <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+            <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+            <title>CoronaLiveStatus</title>
+            <style>
+                body { 
+                    padding-top: 67px; 
+                }
+                #cases{
+                    background-color: #f2f2f2;
+                    padding: 20px;
+                    margin-bottom: 30px;
+                }
+                .loaded{
+                    padding-left: 100px;
+                    padding-top: 10px;
+                }
+                #toloaded{
+                    display: none;
+                }
+                #error{
+                    display: none;
+                }
+                @media only screen and (max-width: 600px) {
+                    .loaded{
+                        padding-left: 10px;
+                        padding-top: 0px;
+                    }
+                }
+            </style>
+            <script type="text/javascript">
+                function plotd(a,b,c){
+                    a = a.replace(/,/g, "");
+                    a = Number(a);
+                    b = b.replace(/,/g, "");
+                    b = Number(b);
+                    c = c.replace(/,/g, "");
+                    c = Number(c);
+                    var chart = new CanvasJS.Chart("chartContainer", {
+                        theme: "light2", 
+                        animationEnabled: true, 
+                        title:{
+                            text: "COVID-19 Live Status"
+                        },
+                        data: [
+                        {
+                            type: "column",
+                            dataPoints: [
+                                { label: "Total Confirmed",  y: a  },
+                                { label: "Recovered", y: b  },
+                                { label: "Deaths", y: c  }
+                            ]
+                        }
+                        ]
+                    });
+                    chart.render();
+                }   
+                function cntry(){
+                    document.getElementById("error").style.display = "none";
+                    document.getElementById("toloaded").style.display = "none";
+                    if(document.getElementById("stopc")){
+                        document.getElementById("stopc").src = "spin.gif";
+                    }
+                    else{
+                        document.getElementById("chartContainer").innerHTML = '<img src="corona.jpg" class="rounded mx-auto d-block" id="stopc" style="margin-top:100px;" alt="spin" height="200px" width="200px">';
+                        document.getElementById("stopc").src = "spin.gif";
+                    }
+                    var country = document.getElementById("country").value;
+                    var url = "https://coronavirus-monitor.p.rapidapi.com/coronavirus/latest_stat_by_country.php?country="+country;
+                    var settings = {
+                        "async": true,
+                        "crossDomain": true,
+                        "url": url,
+                        "method": "GET",
+                        "headers": {
+                            "x-rapidapi-host": "coronavirus-monitor.p.rapidapi.com",
+                            "x-rapidapi-key": "23b14c031bmsh80fd65685835230p1432afjsn2ef2d68ea6cd"
+                        }
+                    }
+                    $.ajax(settings).done(function (response) {
+                        console.log(response);
+                        var obj = JSON.parse(response);
+                        if(obj.latest_stat_by_country[0]){
+                            var details = obj.latest_stat_by_country;
+                            document.getElementById("tot").innerHTML = details[0].total_cases;
+                            document.getElementById("rec").innerHTML = details[0].total_recovered;
+                            document.getElementById("det").innerHTML = details[0].total_deaths;
+                            document.getElementById("cntryname").innerHTML = "Corona Status in "+obj.country;
+                            document.getElementById("toloaded").style.display = "block";
+                            document.getElementById("error").style.display = "none";
+                            plotd(details[0].total_cases,details[0].total_recovered,details[0].total_deaths);
+                        }
+                        else{
+                            document.getElementById("error").style.display = "block";
+                            document.getElementById("stopc").src = "corona.jpg";
+                            console.log("No country");
+                        }
+                    });
+                }
+            </script>
+        </head>
+        <body>
+            <nav class="navbar bg-dark navbar-dark fixed-top">
+                <image src="white_scrapshut1.png" class="nav-brand" alt="Brand" style="width:50px">
+                <a class="navbar-brand" href="index.html">ScrapShut</a>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#collapsibleNavbar">
+                        <span class="navbar-toggler-icon"></span>
+                </button>
+                <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" href="index.html">World wide Report</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="state.html">State wise Reports</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="district.html">District wise Reports</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="https://scrapshut.com/" target="_blank">About us</a>
+                    </li>
+                </ul>  
+                </div>
+            </nav>
+                <div class="container-fluid" id="cases">
+                    <br/>
+                    <div class="row">
+                        <div class="col-lg-6 col-md-6 loaded">
+                            <h4>Search by Country Name</h4>
+                            <form class="form-inline my-2 my-lg-0" action="javascript:void(0);">
+                                <input class="form-control mr-sm-2" type="search" id="country" placeholder="Search" aria-label="Search">
+                                <button class="btn btn-outline-success my-2 my-sm-0" type="button" onclick="cntry();">Get Details</button>
+                            </form>
+                            <br/>
+                        </div>
+                        <div class="col-lg-6 col-md-6">
+                            <div class="container" id="toloaded">
+                                <h4 id="cntryname">World Wide Corona Cases</h4>
+                                <br/>
+                                <p>Total Confirmed - <span id="tot"><i class="fa fa-circle-o-notch fa-spin"></i></span></p>
+                                <p>Total Recovered - <span id="rec"><i class="fa fa-circle-o-notch fa-spin"></i></span></p>
+                                <p>Total Deaths - <span id="det"><i class="fa fa-circle-o-notch fa-spin"></i></span></p>
+                            </div>  
+                            <div id="error">
+                                <h6 style="color: red;">Please Enter a valid Country Name</h6>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            <div class="container" id="graph">
+                <div id="chartContainer" style="height: 370px; width: 100%;">
+                    <img src="corona.jpg" class="rounded mx-auto d-block" id="stopc" style="margin-top:100px;" alt="spin" height="200px" width="200px">
+                </div>
+            </div>
+            <script src="https://canvasjs.com/assets/script/canvasjs.min.js"></script>
+        </body>
+    </html>
